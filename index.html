@@ -320,6 +320,34 @@ function openPhotos() { document.getElementById('photoSearch').value = ''; rende
 function closePhotos() { document.getElementById('photoModal').classList.remove('active'); }
 function renderPhotoList() {
   const q = norm(document.getElementById('photoSearch').value);
+  
+  // ۱. خواندن محصولات ذخیره شده از حافظه و اضافه کردن به لیست موقت
+  let allProducts = [...products];
+  try {
+    const custom = JSON.parse(localStorage.getItem('alaz-custom-products') || '[]');
+    custom.forEach(cp => {
+      if (!allProducts.find(p => p.id === cp.id)) allProducts.push(cp);
+    });
+  } catch(e) {}
+
+  // ۲. فیلتر کردن بر اساس جستجو
+  const list = allProducts.filter(p => {
+    const searchStr = p.search || norm((p.cat || '') + ' ' + (p.name || ''));
+    return !q || searchStr.includes(q);
+  });
+
+  // ۳. نمایش لیست
+  document.getElementById('photoList').innerHTML = list.map(p => {
+    const mine = !!photoURLs[p.id];
+    return `<div class="cart-item">
+      <img class="pthumb" src="${photoURLs[p.id] || 'images/' + p.id + '.jpg'}" alt="" onerror="this.style.visibility='hidden'">
+      <div class="cart-item-info"><div class="cart-item-name">${p.name}</div></div>
+      <button class="btn btn-primary mini" onclick="pickPhoto(${p.id})">${mine ? 'تغییر' : 'افزودن'}</button>
+      ${mine ? `<button class="btn btn-secondary mini" onclick="armed(this, () => delPhoto(${p.id}))">حذف</button>` : ''}
+    </div>`;
+  }).join('') || '<div class="empty-cart">محصولی یافت نشد.</div>';
+}
+  const q = norm(document.getElementById('photoSearch').value);
   const list = products.filter(p => {
   const searchStr = p.search || norm(p.cat + ' ' + p.name);
   return !q || searchStr.includes(q);
