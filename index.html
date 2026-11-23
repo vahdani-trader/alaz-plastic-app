@@ -95,6 +95,7 @@ header{background:var(--primary);color:#fff;padding:15px;position:sticky;top:0;z
     <button class="btn btn-secondary price-edit-btn" onclick="openPrices()">ویرایش قیمت پایه محصولات</button>
     <button class="btn btn-secondary price-edit-btn" onclick="openHistory()">تاریخچه سفارش‌ها</button>
     <button class="btn btn-secondary price-edit-btn" onclick="openPhotos()">افزودن عکس محصولات</button>
+    <button class="btn btn-primary price-edit-btn" onclick="openAddProduct()">+ افزودن محصول جدید به لیست</button>
   </div>
 </header>
 <div class="search-bar"><input type="text" id="searchInput" placeholder="جستجوی محصول (مثلاً: زباله، نایلکس، ۶۰...)"><div id="priceDate" style="font-size:11px;color:#94a3b8;margin-top:6px"></div></div>
@@ -148,6 +149,26 @@ header{background:var(--primary);color:#fff;padding:15px;position:sticky;top:0;z
   </div>
 </div>
 <div class="lightbox" id="lightbox" onclick="this.classList.remove('active')"><img id="lightboxImg" alt=""></div>
+<div class="modal" id="addProductModal" onclick="if(event.target===this)closeAddProduct()">
+  <div class="modal-content">
+    <div class="modal-header"><h2>افزودن محصول جدید</h2><button class="close-btn" onclick="closeAddProduct()">&times;</button></div>
+    <div class="modal-body" style="display:grid; gap:10px;">
+      <input type="text" id="newProdName" placeholder="نام محصول (مثلاً: نایلون شیرینگ)" style="padding:10px; border:1px solid #ccc; border-radius:8px; font-family:inherit;">
+      <select id="newProdCat" style="padding:10px; border:1px solid #ccc; border-radius:8px; font-family:inherit;">
+        <option value="نایلکس">نایلکس</option>
+        <option value="کیسه فریزر">کیسه فریزر</option>
+        <option value="کیسه زباله">کیسه زباله</option>
+        <option value="سفره">سفره</option>
+        <option value="سلفون و دستکش">سلفون و دستکش</option>
+        <option value="سایر">سایر</option>
+      </select>
+      <input type="text" inputmode="numeric" id="newProdPrice" placeholder="قیمت پایه (تومان)" style="padding:10px; border:1px solid #ccc; border-radius:8px; font-family:inherit; direction:ltr;">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="saveNewProduct()">ذخیره محصول</button>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -373,6 +394,34 @@ function armed(btn, action) {
   btn.dataset.label = btn.textContent; btn.dataset.armed = '1';
   btn.textContent = 'مطمئنی؟ دوباره بزن'; btn.style.background = '#ef4444';
   btn._t = setTimeout(reset, 3000);
+}
+// ---------- افزودن محصول جدید به لیست ----------
+function openAddProduct() { document.getElementById('addProductModal').classList.add('active'); }
+function closeAddProduct() { document.getElementById('addProductModal').classList.remove('active'); }
+
+function saveNewProduct() {
+  const name = document.getElementById('newProdName').value.trim();
+  const cat = document.getElementById('newProdCat').value;
+  const priceStr = toEnDigits(document.getElementById('newProdPrice').value).replace(/[,٬،\s]/g, '');
+  const price = parseInt(priceStr, 10);
+
+  if (!name) { toast('نام محصول را وارد کنید.'); return; }
+  if (isNaN(price) || price < 0) { toast('قیمت معتبر وارد کنید.'); return; }
+
+  // ساخت یک آیدی یکتا بر اساس زمان
+  const newId = Date.now();
+  const newProduct = { id: newId, cat: cat, name: name, price: price, search: norm(cat + ' ' + name) };
+
+  products.push(newProduct); // اضافه به آرایه اصلی
+  
+  // ذخیره در حافظه مرورگر تا با رفرش پاک نشود
+  let customProducts = JSON.parse(localStorage.getItem('alaz-custom-products') || '[]');
+  customProducts.push(newProduct);
+  localStorage.setItem('alaz-custom-products', JSON.stringify(customProducts));
+
+  renderProducts(); // آپدیت لیست
+  closeAddProduct();
+  toast('محصول جدید با موفقیت اضافه شد.');
 }
 function openPrices() {
   document.getElementById('priceList').innerHTML = products.map(p => `
@@ -661,6 +710,15 @@ document.getElementById('profitSlider').addEventListener('input', e => {
 window.addEventListener('resize', syncHeaderHeight);
 
 // ---------- شروع ----------
+// لود کردن محصولات دستی ذخیره شده
+try {
+  const customProducts = JSON.parse(localStorage.getItem('alaz-custom-products') || '[]');
+  if (Array.isArray(customProducts)) {
+    customProducts.forEach(cp => {
+      if (!products.find(p => p.id === cp.id)) products.push(cp);
+    });
+  }
+} catch(e) {}
 load();
 document.getElementById('profitSlider').value = profitPercent;
 document.getElementById('profitValue').textContent = profitPercent.toLocaleString('fa-IR') + '%';
