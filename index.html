@@ -320,7 +320,10 @@ function openPhotos() { document.getElementById('photoSearch').value = ''; rende
 function closePhotos() { document.getElementById('photoModal').classList.remove('active'); }
 function renderPhotoList() {
   const q = norm(document.getElementById('photoSearch').value);
-  const list = products.filter(p => !q || p.search.includes(q));
+  const list = products.filter(p => {
+  const searchStr = p.search || norm(p.cat + ' ' + p.name);
+  return !q || searchStr.includes(q);
+});
   document.getElementById('photoList').innerHTML = list.map(p => {
     const mine = !!photoURLs[p.id];
     return `<div class="cart-item">
