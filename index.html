@@ -430,7 +430,7 @@ function histRepeat(no) {
     else cart[i.id] = { qty: i.qty, customPrice: calculatePrice(priceOf(p)), edited: false };
   });
   if (!customer.name && !customer.phone) customer = { name: o.name || '', phone: o.phone || '' };
-  updateBottomBar(); save(); closeHistory();
+ updateBottomBar(); renderProducts(); save();  closeHistory();
   toast('اقلام سفارش به سبد اضافه شد (با قیمت‌های فعلی).');
 }
 function histDelete(no) { orderHistory = orderHistory.filter(h => h.no !== no); save(); renderHistory(); }
@@ -636,7 +636,8 @@ function renderProducts() {
           <div class="product-name">${p.name}</div>
           <div class="product-final-price">${formatMoney(finalPrice)}</div>
         </div>
-        <button class="add-btn" onclick="addToCart(${p.id})">+</button>`;
+        <button class="add-btn" onclick="addToCart(${p.id})">+</button>
+<span class="product-qty">${(cart[p.id]?.qty || 0).toLocaleString('fa-IR')}</span>`;
       container.appendChild(card);
     });
   });
@@ -650,7 +651,9 @@ function addToCart(id) {
     const p = products.find(x => x.id === id);
     cart[id] = { qty: 1, customPrice: calculatePrice(priceOf(p)), edited: false };
   } else cart[id].qty += 1;
-  updateBottomBar(); save();
+  updateBottomBar();
+  renderProducts();
+  save();
 }
 
 function updateBottomBar() {
@@ -714,15 +717,35 @@ function renderCartItems() {
 function changeQty(id, d) {
   cart[id].qty += d;
   if (cart[id].qty <= 0) delete cart[id];
-  renderCartItems(); updateBottomBar(); save();
+  renderCartItems();
+  updateBottomBar();
+  renderProducts();
+  save();
 }
+
 function setQty(id, str) {
   const n = parseInt(toEnDigits(str).replace(/[,٬،\s]/g, ''), 10);
-  if (isNaN(n) || n < 0 || n > 99999) { toast('تعداد معتبر وارد کنید.'); renderCartItems(); return; }
-  if (n === 0) delete cart[id]; else cart[id].qty = n;
-  renderCartItems(); updateBottomBar(); save();
+  if (isNaN(n) || n < 0 || n > 99999) {
+    toast('تعداد معتبر وارد کنید.');
+    renderCartItems();
+    return;
+  }
+  if (n === 0) delete cart[id];
+  else cart[id].qty = n;
+
+  renderCartItems();
+  updateBottomBar();
+  renderProducts();
+  save();
 }
-function removeFromCart(id) { delete cart[id]; renderCartItems(); updateBottomBar(); save(); }
+
+function removeFromCart(id) {
+  delete cart[id];
+  renderCartItems();
+  updateBottomBar();
+  renderProducts();
+  save();
+}
 
 function updatePrice(id, str) {
   // ارقام فارسی/عربی و جداکننده‌های هزارگان (, ٬ ،) پشتیبانی می‌شوند
