@@ -452,11 +452,11 @@ function renderProducts() {
     list.forEach(p => {
       const finalPrice = calculatePrice(priceOf(p));
       const card = document.createElement('div');
-      card.className = 'product-card' + (p.best ? ' best-seller' : '');
+      card.className = 'product-card';
       card.innerHTML = `
         <img class="thumb" src="${photoURLs[p.id] || 'images/' + p.id + '.jpg'}" data-id="${p.id}" alt="" loading="lazy" onerror="imgErr(this)" onclick="showImg(this.src)">
         <div class="product-info">
-          <div class="product-name">${p.name}${p.best ? '<span class="best-seller-badge">پرفروش</span>' : ''}</div>
+          <div class="product-name">${p.name}</div>
           <div class="product-final-price">${formatMoney(finalPrice)}</div>
         </div>
         <button class="add-btn" onclick="addToCart(${p.id})">+</button>`;
