@@ -94,7 +94,7 @@ header{background:var(--primary);color:#fff;padding:15px;position:sticky;top:0;z
     <span class="profit-value" id="profitValue">10%</span>
     <button class="btn btn-secondary price-edit-btn" onclick="openPrices()">ویرایش قیمت پایه محصولات</button>
     <button class="btn btn-secondary price-edit-btn" onclick="openHistory()">تاریخچه سفارش‌ها</button>
-    <button class="btn btn-secondary price-edit-btn" onclick="openPhotos()">افزودن عکس محصولات</button>
+    <button class="btn btn-secondary price-edit-btn" onclick="forceOpenPhotos()">افزودن عکس محصولات</button>
     <button class="btn btn-primary price-edit-btn" onclick="openAddProduct()">+ افزودن محصول جدید به لیست</button>
   </div>
 </header>
@@ -315,6 +315,20 @@ function resizeImage(file, max = 520) {
     img.onerror = () => { URL.revokeObjectURL(u); rej(new Error('bad image')); };
     img.src = u;
   });
+}
+  function forceOpenPhotos() {
+  // ۱. خواندن محصولات دستی از حافظه
+  try {
+    const custom = JSON.parse(localStorage.getItem('alaz-custom-products') || '[]');
+    custom.forEach(cp => {
+      if (!products.find(p => p.id === cp.id)) products.push(cp);
+    });
+  } catch(e) {}
+  
+  // ۲. باز کردن پنجره عکس‌ها
+  document.getElementById('photoSearch').value = '';
+  renderPhotoList();
+  document.getElementById('photoModal').classList.add('active');
 }
 function openPhotos() { document.getElementById('photoSearch').value = ''; renderPhotoList(); document.getElementById('photoModal').classList.add('active'); }
 function closePhotos() { document.getElementById('photoModal').classList.remove('active'); }
